@@ -1,0 +1,68 @@
+﻿AppType=JavaFX
+Build1=Default,b4j.example
+File1=Layout1.bjl
+FileGroup1=Default Group
+Group=Default Group
+Library1=jcore
+Library2=jfx
+Library3=jxui
+Library4=javaobject
+Module1=jMetadataExtractor
+NumberOfFiles=1
+NumberOfLibraries=4
+NumberOfModules=1
+Version=9.8
+@EndOfDesignText@
+#Region Project Attributes 
+	#MainFormWidth: 600
+	#MainFormHeight: 600 
+#End Region
+
+#AdditionalJar: xmpcore-6.1.11
+#AdditionalJar: metadata-extractor-2.19.0
+
+Sub Process_Globals
+	Private fx As JFX
+	Private MainForm As Form
+	Private xui As XUI 
+	Private Button1 As B4XView
+End Sub
+
+Sub AppStart (Form1 As Form, Args() As String)
+	MainForm = Form1
+	MainForm.RootPane.LoadLayout("Layout1")
+	MainForm.Show
+End Sub
+
+Sub Button1_Click
+	xui.MsgboxAsync("Hello World!", "B4X")
+	Dim path As String = File.Combine(File.DirApp,"IMG_0400.JPG")
+	Dim extractor As jMetadataExtractor
+	extractor.Initialize(path)
+	extractor.readMetadata
+	Log(extractor.Directories)
+	Log(readOrientation(path))
+End Sub
+
+Public Sub readOrientation(path As String)
+	Dim meAsJO As JavaObject = Me
+	Dim jo As JavaObject
+	Dim fileJO As JavaObject
+	fileJO.InitializeNewInstance("java.io.File",Array(path))
+	jo = jo.InitializeStatic("com.drew.imaging.ImageMetadataReader").RunMethod("readMetadata",Array(fileJO))
+	Dim classJO As JavaObject
+	classJO.InitializeStatic("com.drew.metadata.exif.ExifIFD0Directory")
+	
+	Dim exifClass As JavaObject = meAsJO.RunMethod("getExifClass",Null)
+	Log(exifClass)
+	Dim dir As JavaObject = jo.RunMethod("getFirstDirectoryOfType",Array(exifClass))
+	Log(dir.RunMethod("getInt",Array(classJO.GetField("TAG_ORIENTATION"))))
+	Log(dir)
+End Sub
+
+#if java
+static public Object getExifClass(){
+    System.out.println("get exif class");
+    return com.drew.metadata.exif.ExifIFD0Directory.class;
+}
+#End If
